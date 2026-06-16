@@ -14,7 +14,14 @@ exports.postAddProduct = (req, res, next) => {
   const imageUrl = req.body.imageUrl || null;
   const price = req.body.price;
   const description = req.body.description;
-  const product = new Product(title, price, description, imageUrl,null,req.user._id);
+  const product = new Product({
+    title:title, 
+    price:price, 
+    description:description, 
+    imageUrl:imageUrl,
+    userId:req.user._id
+  }
+  );
 //   req.user.createProduct({
 //     title:title,
 //     price:price,
@@ -53,16 +60,28 @@ exports.postEditProduct = (req, res, next) => {
   const updatedPrice = req.body.price;
   const updatedImageUrl = req.body.imageUrl;
   const updatedDesc = req.body.description;
-  const product=new Product(updatedTitle,updatedPrice,updatedDesc,updatedImageUrl,prodId)
-  product.save()
+  Product.findById(prodId).then(product=>{
+    product.title=updatedTitle
+    product.proce=updatedPrice
+    product.description=updatedDesc
+    product.imageUrl=updatedImageUrl
+  return product.save()
   .then(result=>{
     res.redirect('/admin/products');
   }).catch(err=>console.log(err))
-};
+
+});
+}
 
 exports.getProducts = (req, res, next) => {
   //Product.findAll().then(products => {
-    Product.fetchAll().then(products => {
+    Product.find()
+    // .select('title price - _id')
+    // //fields to retrieve from db for main doc
+    // .populate('userId', 'name')//can populate a certain field will all information not just ID for embedded doc
+    // //path you want to populate
+    // //returns entire user object
+    .then(products => {
     res.render('admin/products', {
       prods: products,
       pageTitle: 'Admin Products',
@@ -73,7 +92,7 @@ exports.getProducts = (req, res, next) => {
 
 exports.postDeleteProduct = (req, res, next) => {
   const prodId = req.body.productId;
-  Product.deleteById(prodId)
+  Product.findByIdAndDelete(prodId)
   .then(result=>{
     console.log("DELETED PRODUCT")
     res.redirect('/admin/products');
